@@ -46,6 +46,14 @@ app.use('/api/notifications', verifyToken, notificationRoutes);
 app.use('/api/analytics', verifyToken, analyticsRoutes);
 app.use('/api/audit', verifyToken, auditRoutes);
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Construction Quality Pulse API' });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
   

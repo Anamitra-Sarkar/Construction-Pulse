@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -20,8 +20,13 @@ export default function LoginPage() {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    if (user) {
+      router.push(user.role === 'admin' ? '/admin' : '/engineer')
+    }
+  }, [user, router])
+
   if (user) {
-    router.push(user.role === 'admin' ? '/admin' : '/engineer')
     return null
   }
 
@@ -123,5 +128,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-fabric">
+        <div className="text-slate-500">Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
