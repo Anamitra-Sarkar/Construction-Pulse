@@ -6,7 +6,21 @@ let auth: Auth | null = null;
 let firebaseInitError: Error | null = null;
 let initialized = false;
 
-export const isFirebaseEnabled = process.env.NEXT_PUBLIC_FIREBASE_ENABLED === 'true';
+const firebaseEnabledFlag = process.env.NEXT_PUBLIC_FIREBASE_ENABLED;
+const normalizedFlag = firebaseEnabledFlag?.toLowerCase().trim();
+const flagDefined = normalizedFlag !== undefined && normalizedFlag !== '';
+const flagEnabled = ['true', '1', 'yes', 'on'].includes(normalizedFlag ?? '');
+const configValues = [
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+];
+const hasConfigValues = configValues.some((value) => value?.trim());
+
+export const isFirebaseEnabled = flagDefined ? flagEnabled : hasConfigValues;
 
 export const initFirebaseAuth = async (): Promise<{ auth: Auth | null; firebaseInitError: Error | null }> => {
   if (initialized) {
@@ -31,12 +45,8 @@ export const initFirebaseAuth = async (): Promise<{ auth: Auth | null; firebaseI
   };
 
   const hasAllValues = Object.values(firebaseConfig).every(Boolean);
-  const isLikelyApiKey = firebaseConfig.apiKey.startsWith('AIza') && firebaseConfig.apiKey.length > 30;
-  const isLikelyAuthDomain =
-    firebaseConfig.authDomain.includes('firebaseapp.com') ||
-    firebaseConfig.authDomain.includes('web.app');
 
-  if (!hasAllValues || !isLikelyApiKey || !isLikelyAuthDomain) {
+  if (!hasAllValues) {
     firebaseInitError = new Error(
       'Missing or invalid Firebase web config. Check NEXT_PUBLIC_FIREBASE_* env vars.'
     );
