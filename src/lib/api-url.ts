@@ -1,6 +1,17 @@
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
 const trimmedApiUrl = rawApiUrl.trim()
 
+const sanitizeProtocol = (value: string) => {
+  const trimmed = value.trim()
+  const normalizedSlashes = trimmed.replace(/\\+/g, '/')
+
+  return normalizedSlashes
+    .replace(/^https:\/(?!\/)/i, 'https://')
+    .replace(/^http:\/(?!\/)/i, 'http://')
+    .replace(/^https\/\/?/i, 'https://')
+    .replace(/^http\/\/?/i, 'http://')
+}
+
 const normalizeApiBase = (value: string) => {
   const cleaned = value.replace(/\/$/, '')
   const apiMatch = cleaned.match(/\/api(\/|$)/i)
@@ -8,7 +19,7 @@ const normalizeApiBase = (value: string) => {
 }
 
 const withProtocol = (() => {
-  const normalizedInput = trimmedApiUrl.replace(/^\/+/, '/')
+  const normalizedInput = sanitizeProtocol(trimmedApiUrl).replace(/^\/+/, '/')
 
   if (normalizedInput.startsWith('//')) {
     return normalizeApiBase(`https:${normalizedInput}`)
