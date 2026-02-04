@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --turbopack",
+        "dev": "next dev",
         "dev:backend": "node server/index.js",
         "build": "next build",
         "start": "next start",
@@ -84,7 +84,7 @@
         "motion": "^12.23.24",
         "motion-dom": "^12.23.23",
         "multer": "^2.0.2",
-        "next": "latest",
+        "next": "15.3.5",
         "next-themes": "^0.4.6",
         "qss": "^3.0.0",
         "react": "^19.0.0",
