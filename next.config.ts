@@ -6,6 +6,7 @@ const LOADER = path.resolve(
   __dirname,
   "src/visual-edits/component-tagger-loader.js"
 );
+const enableOrchidsLoader = process.env.ORCHIDS === "true";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -39,7 +40,7 @@ const nextConfig: NextConfig = {
    * Turbopack rules are ONLY for Orchids / local preview.
    * Vercel must NOT see custom loaders.
    */
-  ...(process.env.VERCEL
+  ...(process.env.VERCEL || !enableOrchidsLoader
     ? {}
     : {
         turbopack: {
