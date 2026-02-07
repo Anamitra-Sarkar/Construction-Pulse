@@ -163,4 +163,58 @@
   .btn-refined {
     @apply relative overflow-hidden px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium shadow-soft hover:shadow-hover hover:opacity-95 active:scale-[0.98] transition-all duration-300 ease-soft;
   }
+
+  /* Heading with gradient glow effect */
+  .heading-glow {
+    @apply font-bold text-slate-900 tracking-tight;
+    background: linear-gradient(135deg, 
+      oklch(0.2 0.02 240) 0%, 
+      oklch(0.35 0.08 240) 50%, 
+      oklch(0.2 0.02 240) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 20px oklch(0.45 0.15 240 / 0.08);
+    animation: heading-sheen 8s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .heading-glow {
+      animation: none;
+    }
+  }
+
+  @keyframes heading-sheen {
+    0%, 100% { 
+      background-position: 0% 50%; 
+    }
+    50% { 
+      background-position: 100% 50%; 
+    }
+  }
+
+  /* Subtle floating animation for background elements */
+  @keyframes subtle-float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-5px) rotate(1deg);
+    }
+    66% {
+      transform: translateY(5px) rotate(-1deg);
+    }
+  }
+
+  .animate-subtle-float {
+    animation: subtle-float 20s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-subtle-float {
+      animation: none;
+    }
+  }
 }

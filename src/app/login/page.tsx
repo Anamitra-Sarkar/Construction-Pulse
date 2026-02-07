@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { EmojiStatus, EmojiState } from '@/components/EmojiStatus'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -10,6 +11,7 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showBootstrapSuccess, setShowBootstrapSuccess] = useState(false)
+  const [emojiState, setEmojiState] = useState<EmojiState>('idle')
   const { login, user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -22,7 +24,10 @@ function LoginForm() {
 
   useEffect(() => {
     if (user) {
-      router.push(user.role === 'admin' ? '/admin' : '/engineer')
+      setEmojiState('success')
+      setTimeout(() => {
+        router.push(user.role === 'admin' ? '/admin' : '/engineer')
+      }, 500)
     }
   }, [user, router])
 
@@ -34,11 +39,15 @@ function LoginForm() {
     e.preventDefault()
     setError('')
     setLoading(true)
+    setEmojiState('loading')
 
     try {
       await login(email, password)
+      setEmojiState('success')
     } catch (err: any) {
+      setEmojiState('failure')
       setError(err.message || 'Login failed')
+      setTimeout(() => setEmojiState('idle'), 2000)
     } finally {
       setLoading(false)
     }
@@ -56,6 +65,11 @@ function LoginForm() {
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">Construction Quality Pulse</h1>
             <p className="text-slate-500 mt-2 font-medium">Professional QA Inspection System</p>
+            
+            {/* Emoji Status */}
+            <div className="mt-6 flex justify-center">
+              <EmojiStatus state={emojiState} />
+            </div>
           </div>
 
           {showBootstrapSuccess && (

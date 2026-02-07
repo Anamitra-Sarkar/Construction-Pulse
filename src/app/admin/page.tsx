@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth-context'
 import { useEffect, useState } from 'react'
 import { DashboardAnalytics } from '@/lib/types'
 import Link from 'next/link'
+import { asArray, asNumber } from '@/lib/safe'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function AdminDashboard() {
   const { token } = useAuth()
@@ -27,17 +29,17 @@ export default function AdminDashboard() {
           // Ensure data has expected structure with safe defaults
           const normalizedData: DashboardAnalytics = {
             summary: {
-              totalSites: data?.summary?.totalSites ?? 0,
-              activeSites: data?.summary?.activeSites ?? 0,
-              pendingReports: data?.summary?.pendingReports ?? 0,
-              averageCompliance: data?.summary?.averageCompliance ?? 0,
-              totalReports: data?.summary?.totalReports ?? 0,
-              approvedReports: data?.summary?.approvedReports ?? 0,
-              rejectedReports: data?.summary?.rejectedReports ?? 0,
-              approvedRate: data?.summary?.approvedRate ?? 0,
+              totalSites: asNumber(data?.summary?.totalSites, 0),
+              activeSites: asNumber(data?.summary?.activeSites, 0),
+              pendingReports: asNumber(data?.summary?.pendingReports, 0),
+              averageCompliance: asNumber(data?.summary?.averageCompliance, 0),
+              totalReports: asNumber(data?.summary?.totalReports, 0),
+              approvedReports: asNumber(data?.summary?.approvedReports, 0),
+              rejectedReports: asNumber(data?.summary?.rejectedReports, 0),
+              approvedRate: asNumber(data?.summary?.approvedRate, 0),
             },
-            dailyTrends: Array.isArray(data?.dailyTrends) ? data.dailyTrends : [],
-            siteComparison: Array.isArray(data?.siteComparison) ? data.siteComparison : [],
+            dailyTrends: asArray(data?.dailyTrends),
+            siteComparison: asArray(data?.siteComparison),
           }
           setAnalytics(normalizedData)
           setLoading(false)
@@ -52,17 +54,17 @@ export default function AdminDashboard() {
   return (
     <AuthGuard allowedRoles={['admin']}>
       <DashboardLayout>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-          <p className="text-slate-500">Overview of construction quality metrics</p>
-        </div>
+        <div className="space-y-6">
+          <SectionHeading subtitle="Overview of construction quality metrics">
+            Admin Dashboard
+          </SectionHeading>
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : analytics ? (
-          <>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : analytics ? (
+            <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <StatCard
                 label="Total Sites"
@@ -115,7 +117,7 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <h3 className="font-semibold text-slate-900 mb-4">Site Performance</h3>
                 <div className="space-y-3">
-                  {analytics.siteComparison.slice(0, 5).map((site) => (
+                  {asArray(analytics.siteComparison).slice(0, 5).map((site) => (
                     <div key={site.site_id} className="flex items-center justify-between">
                       <span className="text-sm text-slate-600 truncate max-w-[200px]">
                         {site.site_name}
@@ -124,16 +126,16 @@ export default function AdminDashboard() {
                         <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-600 rounded-full"
-                            style={{ width: `${site.avg_compliance}%` }}
+                            style={{ width: `${asNumber(site.avg_compliance, 0)}%` }}
                           />
                         </div>
                         <span className="text-sm font-medium text-slate-900 w-12 text-right">
-                          {site.avg_compliance.toFixed(0)}%
+                          {asNumber(site.avg_compliance, 0).toFixed(0)}%
                         </span>
                       </div>
                     </div>
                   ))}
-                  {analytics.siteComparison.length === 0 && (
+                  {asArray(analytics.siteComparison).length === 0 && (
                     <p className="text-sm text-slate-500 text-center py-4">No site data available</p>
                   )}
                 </div>
@@ -193,6 +195,7 @@ export default function AdminDashboard() {
         ) : (
           <p className="text-slate-500">Failed to load analytics</p>
         )}
+        </div>
       </DashboardLayout>
     </AuthGuard>
   )
