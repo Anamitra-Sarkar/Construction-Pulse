@@ -123,7 +123,7 @@ export default function EngineerReportsPage() {
         </div>
       ) : (
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" role="region" aria-label="My QA Reports">
           <table className="w-full text-left min-w-[700px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>

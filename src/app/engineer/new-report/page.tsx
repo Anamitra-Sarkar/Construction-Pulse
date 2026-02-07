@@ -259,7 +259,7 @@ function NewReportForm() {
                       s.status === 'delayed' ? 'bg-red-100 text-red-700' :
                       'bg-slate-100 text-slate-700'
                     }`}>
-                      {s.status?.replace('-', ' ').replace('_', ' ').toUpperCase()}
+                      {s.status?.replace(/[-_]/g, ' ').toUpperCase()}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-slate-500">
