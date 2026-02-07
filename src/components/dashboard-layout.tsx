@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -27,6 +27,7 @@ const engineerNavItems = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, notifications, unreadCount, markNotificationsRead } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
   const [showNotifications, setShowNotifications] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile menu state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Desktop collapse state
@@ -262,7 +263,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                         notifications.slice(0, 10).map((n) => (
                           <div
                             key={n._id}
-                            onClick={() => markNotificationsRead(n._id)}
+                            onClick={() => {
+                              markNotificationsRead(n._id)
+                              if (n.link) {
+                                setShowNotifications(false)
+                                router.push(n.link)
+                              }
+                            }}
                             className={cn(
                               "p-4 border-b border-border/20 last:border-0 cursor-pointer hover:bg-slate-50 transition-colors",
                               !n.isRead && "bg-primary/[0.02]"
