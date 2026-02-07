@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/dashboard-layout'
 import { AuthGuard } from '@/components/auth-guard'
 import { asArray } from '@/lib/safe'
 import { SectionHeading } from '@/components/SectionHeading'
+import { toast } from 'sonner'
 
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([])
@@ -16,6 +17,7 @@ export default function SitesPage() {
   const [newSite, setNewSite] = useState({ name: '', location: '', description: '' })
   const [assigningSite, setAssigningSite] = useState<Site | null>(null)
   const [selectedEngineers, setSelectedEngineers] = useState<string[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -42,12 +44,25 @@ export default function SitesPage() {
 
   const handleCreateSite = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!newSite.name.trim()) {
+      toast.error('Site name is required')
+      return
+    }
+    
+    setIsSubmitting(true)
     try {
       await api.post('/sites', newSite)
+      toast.success('Site created successfully')
       setShowModal(false)
+      setNewSite({ name: '', location: '', description: '' })
       fetchData()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create site:', error)
+      const errorMessage = error.response?.data?.error || 'Failed to create site'
+      toast.error(errorMessage)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -130,6 +145,74 @@ export default function SitesPage() {
           </div>
         ))}
       </div>
+
+      {/* Add New Site Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Add New Site</h2>
+            <form onSubmit={handleCreateSite} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Site Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newSite.name}
+                  onChange={(e) => setNewSite({ ...newSite, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter site name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={newSite.location}
+                  onChange={(e) => setNewSite({ ...newSite, location: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter location (optional)"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={newSite.description}
+                  onChange={(e) => setNewSite({ ...newSite, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={3}
+                  placeholder="Enter description (optional)"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false)
+                    setNewSite({ name: '', location: '', description: '' })
+                  }}
+                  disabled={isSubmitting}
+                  className="flex-1 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Site'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Assign Modal */}
       {assigningSite && (

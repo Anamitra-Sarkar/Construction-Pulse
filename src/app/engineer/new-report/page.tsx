@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import { DEFAULT_CHECKLIST, Site } from '@/lib/types'
 import { toast } from 'sonner'
+import { AuthGuard } from '@/components/auth-guard'
+import { DashboardLayout } from '@/components/dashboard-layout'
+import { SectionHeading } from '@/components/SectionHeading'
 
 function NewReportForm() {
   const router = useRouter()
@@ -53,14 +56,25 @@ function NewReportForm() {
     setChecklist(newChecklist)
   }
 
-  if (!site) return <div className="p-8">Loading site data...</div>
+  if (!site) {
+    return (
+      <AuthGuard allowedRoles={['engineer']}>
+        <DashboardLayout>
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </DashboardLayout>
+      </AuthGuard>
+    )
+  }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">New QA Report</h1>
-        <p className="text-slate-500">Site: {site.name} | {site.location}</p>
-      </div>
+    <AuthGuard allowedRoles={['engineer']}>
+      <DashboardLayout>
+        <div className="max-w-4xl mx-auto space-y-8">
+          <SectionHeading subtitle={`Site: ${site.name} | ${site.location}`}>
+            New QA Report
+          </SectionHeading>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
@@ -126,8 +140,11 @@ function NewReportForm() {
             {loading ? 'Submitting...' : 'Submit QA Report'}
           </button>
         </div>
-      </form>
-    </div>
+          </div>
+        </form>
+        </div>
+      </DashboardLayout>
+    </AuthGuard>
   )
 }
 

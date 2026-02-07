@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useEffect, useState } from 'react'
 import { Site, QAReport } from '@/lib/types'
 import Link from 'next/link'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function EngineerDashboard() {
   const { token, user } = useAuth()
@@ -33,10 +34,10 @@ export default function EngineerDashboard() {
   return (
     <AuthGuard allowedRoles={['engineer']}>
       <DashboardLayout>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Welcome, {user?.name}</h1>
-          <p className="text-slate-500">Your assigned sites and recent activity</p>
-        </div>
+        <div className="space-y-6">
+          <SectionHeading subtitle="Your assigned sites and recent activity">
+            Welcome, {user?.name}
+          </SectionHeading>
 
         {loading ? (
           <div className="flex justify-center py-12">
@@ -143,6 +144,7 @@ export default function EngineerDashboard() {
             </div>
           </>
         )}
+        </div>
       </DashboardLayout>
     </AuthGuard>
   )
