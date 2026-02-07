@@ -11,9 +11,9 @@ interface EmojiStatusProps {
 
 const EMOJI_MAP: Record<EmojiState, string> = {
   idle: '😐',
-  loading: '🙂',
+  loading: '🤔',
   success: '😄',
-  failure: '😢'
+  failure: '😞'
 }
 
 const STATE_LABELS: Record<EmojiState, string> = {
