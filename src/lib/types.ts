@@ -84,6 +84,9 @@ export interface AnalyticsSummary {
     totalReports: number
     approvedReports: number
     avgCompliance: number
+    activeSites: number
+    pendingReports: number
+    rejectedReports: number
   }
   dailyTrends: DailyTrend[]
   siteComparison: SiteComparison[]

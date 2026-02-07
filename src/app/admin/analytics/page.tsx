@@ -33,7 +33,9 @@ export default function AnalyticsPage() {
     trend && 
     typeof trend._id === 'string' && 
     typeof trend.count === 'number' &&
-    !isNaN(trend.count)
+    !isNaN(trend.count) &&
+    typeof trend.avgCompliance === 'number' &&
+    !isNaN(trend.avgCompliance)
   )
 
   return (

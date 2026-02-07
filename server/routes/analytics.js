@@ -70,7 +70,10 @@ router.get('/summary', isAdmin, async (req, res) => {
         totalSites,
         totalReports,
         approvedReports,
-        avgCompliance
+        avgCompliance,
+        activeSites,
+        pendingReports,
+        rejectedReports
       },
       dailyTrends: dailyTrends.map(t => ({
         _id: t._id,
