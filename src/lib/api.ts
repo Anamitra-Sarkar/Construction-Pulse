@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosHeaders } from 'axios';
 import { apiBaseUrl } from './api-url';
 
 // Extend AxiosRequestConfig to include our retry flag
@@ -88,7 +88,7 @@ api.interceptors.response.use(
           
           // Ensure headers object exists before assignment
           if (!originalRequest.headers) {
-            originalRequest.headers = {};
+            originalRequest.headers = new AxiosHeaders();
           }
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           
