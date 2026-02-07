@@ -6,6 +6,10 @@ interface RetryableRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
 }
 
+// Token refresh behavior flags
+const USE_CACHED_TOKEN = false; // Get cached token if valid, refresh if expired
+const FORCE_REFRESH_TOKEN = true; // Always refresh token from Firebase
+
 const api = axios.create({
   baseURL: apiBaseUrl,
 });
@@ -24,8 +28,8 @@ api.interceptors.request.use(async (config) => {
   
   if (user) {
     try {
-      // getIdToken(false) - get cached token if valid, refresh if expired
-      const token = await user.getIdToken(false);
+      // Get cached token if valid, auto-refresh if expired
+      const token = await user.getIdToken(USE_CACHED_TOKEN);
       config.headers.Authorization = `Bearer ${token}`;
       
       if (process.env.NODE_ENV === 'development') {
@@ -80,7 +84,12 @@ api.interceptors.response.use(
         
         if (user) {
           // Force token refresh
-          const newToken = await user.getIdToken(true);
+          const newToken = await user.getIdToken(FORCE_REFRESH_TOKEN);
+          
+          // Ensure headers object exists before assignment
+          if (!originalRequest.headers) {
+            originalRequest.headers = {};
+          }
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           
           if (process.env.NODE_ENV === 'development') {
@@ -122,7 +131,7 @@ export async function authGet<T = any>(path: string, opts = {}) {
   }
   
   // Force token refresh to ensure it's valid
-  const token = await user.getIdToken(true);
+  const token = await user.getIdToken(FORCE_REFRESH_TOKEN);
   
   return api.get<T>(path, {
     headers: { Authorization: `Bearer ${token}` },
