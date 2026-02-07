@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import api from '@/lib/api'
 import { Site, User } from '@/lib/types'
 import { DashboardLayout } from '@/components/dashboard-layout'
@@ -9,34 +9,62 @@ import { asArray } from '@/lib/safe'
 import { SectionHeading } from '@/components/SectionHeading'
 import { toast } from 'sonner'
 
+// Maximum time to wait for API response (in ms)
+const LOADING_TIMEOUT = 5000
+
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
   const [newSite, setNewSite] = useState({ name: '', location: '', description: '' })
   const [assigningSite, setAssigningSite] = useState<Site | null>(null)
   const [selectedEngineers, setSelectedEngineers] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     fetchData()
+    
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
   }, [])
 
   const fetchData = async () => {
+    setLoading(true)
+    setError(null)
+    
+    // Set a timeout to prevent infinite loading
+    timeoutRef.current = setTimeout(() => {
+      setLoading(false)
+      setError('Loading took too long. Please refresh the page.')
+    }, LOADING_TIMEOUT)
+    
     try {
       const [sitesRes, usersRes] = await Promise.all([
         api.get('/sites'),
         api.get('/auth/users')
       ])
+      
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      
       // Defensive: ensure arrays
       const sitesData = asArray<Site>(sitesRes.data)
       const usersData = asArray<User>(usersRes.data.users || usersRes.data)
       
       setSites(sitesData)
       setUsers(usersData.filter((u: User) => u.role === 'engineer'))
-    } catch (error) {
-      console.error('Failed to fetch data:', error)
+      setError(null)
+    } catch (err: any) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      console.error('Failed to fetch data:', err)
+      if (err.response?.status === 401) {
+        setError('Session expired. Please log in again.')
+      } else {
+        setError('Failed to load sites data. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -75,11 +103,53 @@ export default function SitesPage() {
     if (!assigningSite) return
     try {
       await api.post(`/sites/${assigningSite._id}/assign`, { engineerIds: selectedEngineers })
+      toast.success('Engineers assigned successfully')
       setAssigningSite(null)
       fetchData()
     } catch (error) {
       console.error('Failed to assign engineers:', error)
+      toast.error('Failed to assign engineers')
     }
+  }
+
+  if (loading) {
+    return (
+      <AuthGuard allowedRoles={['admin']}>
+        <DashboardLayout>
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="text-sm text-slate-500">Loading sites...</p>
+          </div>
+        </DashboardLayout>
+      </AuthGuard>
+    )
+  }
+
+  if (error) {
+    return (
+      <AuthGuard allowedRoles={['admin']}>
+        <DashboardLayout>
+          <div className="space-y-6">
+            <SectionHeading subtitle="Manage all construction sites and engineer assignments">
+              Construction Sites
+            </SectionHeading>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+              <svg className="w-12 h-12 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="font-semibold text-red-900 mb-2">Unable to Load Sites</h3>
+              <p className="text-red-700 text-sm mb-6">{error}</p>
+              <button
+                onClick={() => fetchData()}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </DashboardLayout>
+      </AuthGuard>
+    )
   }
 
   return (
@@ -98,6 +168,26 @@ export default function SitesPage() {
             </button>
           </div>
 
+      {sites.length === 0 ? (
+        <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-12 text-center">
+          <svg className="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">No Sites Created</h3>
+          <p className="text-slate-500 text-sm mb-6">
+            Get started by creating your first construction site.
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add New Site
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sites.map(site => (
           <div key={site._id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -150,6 +240,7 @@ export default function SitesPage() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Add New Site Modal */}
       {showModal && (
