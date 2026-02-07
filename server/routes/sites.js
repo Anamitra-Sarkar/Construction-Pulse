@@ -46,17 +46,26 @@ router.patch('/:id', isAdmin, async (req, res) => {
 router.post('/:id/assign', isAdmin, async (req, res) => {
   try {
     const { engineerIds } = req.body;
+    
+    // Validate and deduplicate engineer IDs
+    if (!Array.isArray(engineerIds)) {
+      return res.status(400).json({ message: 'engineerIds must be an array' });
+    }
+    
+    // Remove duplicates to ensure idempotency
+    const uniqueEngineerIds = [...new Set(engineerIds)];
+    
     const site = await Site.findByIdAndUpdate(
       req.params.id,
-      { $set: { assignedEngineers: engineerIds }, $set: { updatedAt: Date.now() } },
+      { $set: { assignedEngineers: uniqueEngineerIds, updatedAt: Date.now() } },
       { new: true }
-    );
+    ).populate('assignedEngineers', 'name email');
 
     if (!site) return res.status(404).json({ message: 'Site not found' });
 
     // Send notifications to engineers
     const io = req.app.get('io');
-    for (const engineerId of engineerIds) {
+    for (const engineerId of uniqueEngineerIds) {
       const notification = await Notification.create({
         user: engineerId,
         message: `You have been assigned to site: ${site.name}`,
@@ -66,7 +75,7 @@ router.post('/:id/assign', isAdmin, async (req, res) => {
       io.to(engineerId.toString()).emit('notification', notification);
     }
 
-    await logAction(req.user._id, 'ASSIGN_ENGINEER', 'SITE', site._id, { engineers: engineerIds });
+    await logAction(req.user._id, 'ASSIGN_ENGINEER', 'SITE', site._id, { engineers: uniqueEngineerIds });
     res.json(site);
   } catch (error) {
     res.status(400).json({ message: error.message });
