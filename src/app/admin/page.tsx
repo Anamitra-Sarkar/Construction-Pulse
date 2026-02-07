@@ -4,16 +4,12 @@ import { AuthGuard } from '@/components/auth-guard'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { useAuth } from '@/lib/auth-context'
 import { useEffect, useState } from 'react'
-import { AnalyticsSummary, DailyTrend, SiteComparison } from '@/lib/types'
+import { DashboardAnalytics } from '@/lib/types'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
   const { token } = useAuth()
-  const [analytics, setAnalytics] = useState<{
-    summary: AnalyticsSummary
-    dailyTrends: DailyTrend[]
-    siteComparison: SiteComparison[]
-  } | null>(null)
+  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -29,7 +25,7 @@ export default function AdminDashboard() {
         })
         .then((data) => {
           // Ensure data has expected structure with safe defaults
-          const normalizedData = {
+          const normalizedData: DashboardAnalytics = {
             summary: {
               totalSites: data?.summary?.totalSites ?? 0,
               activeSites: data?.summary?.activeSites ?? 0,
@@ -38,6 +34,7 @@ export default function AdminDashboard() {
               totalReports: data?.summary?.totalReports ?? 0,
               approvedReports: data?.summary?.approvedReports ?? 0,
               rejectedReports: data?.summary?.rejectedReports ?? 0,
+              approvedRate: data?.summary?.approvedRate ?? 0,
             },
             dailyTrends: Array.isArray(data?.dailyTrends) ? data.dailyTrends : [],
             siteComparison: Array.isArray(data?.siteComparison) ? data.siteComparison : [],

@@ -74,17 +74,9 @@ router.get('/summary', isAdmin, async (req, res) => {
       },
       dailyTrends: dailyTrends.map(t => ({
         _id: t._id,
-        date: t._id,
         count: t.count,
         avgCompliance: t.avgCompliance || 0
       })),
-      totalSites,
-      totalReports,
-      activeSites,
-      pendingReports,
-      approvedReports,
-      rejectedReports,
-      averageCompliance: avgCompliance,
       siteComparison: siteComparisonWithNames
     });
   } catch (error) {
@@ -163,7 +155,6 @@ router.get('/dashboard', isAdmin, async (req, res) => {
         totalSites,
         activeSites,
         totalReports,
-        avgCompliance,
         averageCompliance: avgCompliance,
         approvedRate: totalReports > 0 ? Math.round((approvedReports / totalReports) * 100) : 0,
         approvedReports,
