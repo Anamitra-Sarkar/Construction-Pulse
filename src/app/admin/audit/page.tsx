@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { AuthGuard } from '@/components/auth-guard'
 import { asArray, asDate } from '@/lib/safe'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function AuditLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([])
@@ -62,7 +63,9 @@ export default function AuditLogsPage() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-slate-900">System Audit Logs</h1>
+            <SectionHeading subtitle="View all system activity and security logs">
+              System Audit Logs
+            </SectionHeading>
             <button 
               onClick={exportCSV}
               disabled={logs.length === 0}

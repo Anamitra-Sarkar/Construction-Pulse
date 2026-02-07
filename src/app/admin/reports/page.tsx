@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { AuthGuard } from '@/components/auth-guard'
 import { asArray } from '@/lib/safe'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<QAReport[]>([])
@@ -47,7 +48,9 @@ export default function AdminReportsPage() {
     <AuthGuard allowedRoles={['admin']}>
       <DashboardLayout>
         <div className="space-y-6">
-          <h1 className="text-2xl font-bold text-slate-900">QA Reports Review</h1>
+          <SectionHeading subtitle="Review and approve quality assurance reports">
+            QA Reports Review
+          </SectionHeading>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left">

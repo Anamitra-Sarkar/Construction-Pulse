@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { DashboardAnalytics } from '@/lib/types'
 import Link from 'next/link'
 import { asArray, asNumber } from '@/lib/safe'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function AdminDashboard() {
   const { token } = useAuth()
@@ -53,10 +54,10 @@ export default function AdminDashboard() {
   return (
     <AuthGuard allowedRoles={['admin']}>
       <DashboardLayout>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-          <p className="text-slate-500">Overview of construction quality metrics</p>
-        </div>
+        <div className="space-y-6">
+          <SectionHeading subtitle="Overview of construction quality metrics">
+            Admin Dashboard
+          </SectionHeading>
 
         {loading ? (
           <div className="flex justify-center py-12">

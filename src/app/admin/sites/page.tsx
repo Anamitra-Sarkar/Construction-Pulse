@@ -6,6 +6,7 @@ import { Site, User } from '@/lib/types'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { AuthGuard } from '@/components/auth-guard'
 import { asArray } from '@/lib/safe'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([])
@@ -66,7 +67,9 @@ export default function SitesPage() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-slate-900">Construction Sites</h1>
+            <SectionHeading subtitle="Manage all construction sites and engineer assignments">
+              Construction Sites
+            </SectionHeading>
             <button 
               onClick={() => setShowModal(true)}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"

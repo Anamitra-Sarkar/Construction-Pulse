@@ -7,6 +7,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { AuthGuard } from '@/components/auth-guard'
 import { asArray, asNumber } from '@/lib/safe'
+import { ChartWrapper } from '@/components/ChartWrapper'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null)
@@ -88,7 +90,9 @@ export default function AnalyticsPage() {
     <AuthGuard allowedRoles={['admin']}>
       <DashboardLayout>
         <div className="space-y-8">
-          <h1 className="text-2xl font-bold text-slate-900">Enterprise Analytics</h1>
+          <SectionHeading subtitle="View comprehensive quality metrics and trends">
+            Enterprise Analytics
+          </SectionHeading>
       
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -109,9 +113,9 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-6">Submission Trends (Last 7 Days)</h2>
-          <div className="h-80 w-full">
+          <ChartWrapper minHeight="min-h-[320px]">
             {validDailyTrends.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={320}>
                 <LineChart data={validDailyTrends}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="_id" />
@@ -125,14 +129,14 @@ export default function AnalyticsPage() {
                 No data available for the last 7 days
               </div>
             )}
-          </div>
+          </ChartWrapper>
         </div>
 
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
           <h2 className="text-lg font-bold text-slate-900 mb-6">Compliance Trend</h2>
-          <div className="h-80 w-full">
+          <ChartWrapper minHeight="min-h-[320px]">
             {validDailyTrends.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={320}>
                 <BarChart data={validDailyTrends}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="_id" />
@@ -146,7 +150,7 @@ export default function AnalyticsPage() {
                 No compliance data available
               </div>
             )}
-          </div>
+          </ChartWrapper>
         </div>
       </div>
     </div>

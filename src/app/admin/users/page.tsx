@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { AuthGuard } from '@/components/auth-guard'
 import { asArray, asNumber } from '@/lib/safe'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth()
@@ -106,12 +107,11 @@ export default function UsersPage() {
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">User Management</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            {adminCount} active admin{adminCount !== 1 ? 's' : ''} in system
-          </p>
-        </div>
+            <SectionHeading 
+              subtitle={`${adminCount} active admin${adminCount !== 1 ? 's' : ''} in system`}
+            >
+              User Management
+            </SectionHeading>
         <button 
           onClick={() => setShowModal(true)}
           className="btn-refined"
