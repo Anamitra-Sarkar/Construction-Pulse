@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import api from '@/lib/api'
 import { QAReport } from '@/lib/types'
 import { format } from 'date-fns'
+import { AuthGuard } from '@/components/auth-guard'
+import { DashboardLayout } from '@/components/dashboard-layout'
+import { SectionHeading } from '@/components/SectionHeading'
 
 export default function EngineerReportsPage() {
   const [reports, setReports] = useState<QAReport[]>([])
@@ -24,11 +27,25 @@ export default function EngineerReportsPage() {
     fetchReports()
   }, [])
 
-  if (loading) return <div className="p-8">Loading your reports...</div>
+  if (loading) {
+    return (
+      <AuthGuard allowedRoles={['engineer']}>
+        <DashboardLayout>
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </DashboardLayout>
+      </AuthGuard>
+    )
+  }
 
   return (
-    <div className="p-8 space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">My QA Reports History</h1>
+    <AuthGuard allowedRoles={['engineer']}>
+      <DashboardLayout>
+        <div className="space-y-6">
+          <SectionHeading subtitle="View and track all your submitted quality assurance reports">
+            My QA Reports History
+          </SectionHeading>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left">
@@ -125,6 +142,8 @@ export default function EngineerReportsPage() {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </DashboardLayout>
+    </AuthGuard>
   )
 }

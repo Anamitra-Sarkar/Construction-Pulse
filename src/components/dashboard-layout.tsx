@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { format } from 'date-fns'
+import { AnimatedBackground } from '@/components/AnimatedBackground'
 
 const adminNavItems = [
   { href: '/admin', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -60,7 +61,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const navItems = user?.role === 'admin' ? adminNavItems : engineerNavItems
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Background Animation */}
+      <AnimatedBackground />
+      
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-border/40 z-30 flex items-center px-4">
         <button
