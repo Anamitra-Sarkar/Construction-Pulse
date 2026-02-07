@@ -31,7 +31,7 @@ export function AnimatedBackground() {
 
   return (
     <div 
-      className="fixed inset-0 -z-10 pointer-events-none opacity-[0.04]"
+      className="fixed inset-0 -z-10 pointer-events-none opacity-[0.08]"
       aria-hidden="true"
     >
       <svg
@@ -56,7 +56,7 @@ export function AnimatedBackground() {
       </svg>
       
       {/* Subtle construction crane silhouette */}
-      <div className="absolute top-10 right-20 w-32 h-32 opacity-30 animate-subtle-float">
+      <div className="absolute top-10 right-20 w-32 h-32 opacity-50 animate-subtle-float">
         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M50 10 L50 70" stroke="#2563eb" strokeWidth="2" />
           <path d="M50 15 L80 15 L80 65" stroke="#2563eb" strokeWidth="1.5" />

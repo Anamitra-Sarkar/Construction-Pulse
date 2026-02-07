@@ -8,24 +8,18 @@ import { DashboardAnalytics } from '@/lib/types'
 import Link from 'next/link'
 import { asArray, asNumber } from '@/lib/safe'
 import { SectionHeading } from '@/components/SectionHeading'
+import api from '@/lib/api'
 
 export default function AdminDashboard() {
-  const { token } = useAuth()
+  const { user } = useAuth()
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (token) {
-      fetch('/api/analytics', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    if (user) {
+      api.get('/analytics')
         .then((res) => {
-          if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`)
-          }
-          return res.json()
-        })
-        .then((data) => {
+          const data = res.data
           // Ensure data has expected structure with safe defaults
           const normalizedData: DashboardAnalytics = {
             summary: {
@@ -49,7 +43,7 @@ export default function AdminDashboard() {
           setLoading(false)
         })
     }
-  }, [token])
+  }, [user])
 
   return (
     <AuthGuard allowedRoles={['admin']}>

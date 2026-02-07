@@ -7,25 +7,30 @@ import { useEffect, useState } from 'react'
 import { Site, QAReport } from '@/lib/types'
 import Link from 'next/link'
 import { SectionHeading } from '@/components/SectionHeading'
+import api from '@/lib/api'
+import { asArray } from '@/lib/safe'
 
 export default function EngineerDashboard() {
-  const { token, user } = useAuth()
+  const { user } = useAuth()
   const [sites, setSites] = useState<Site[]>([])
   const [reports, setReports] = useState<QAReport[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (token) {
+    if (user) {
       Promise.all([
-        fetch('/api/sites', { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
-        fetch('/api/reports?limit=5', { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()),
-      ]).then(([sitesData, reportsData]) => {
-        setSites(sitesData.sites || [])
-        setReports(reportsData.reports || [])
+        api.get('/sites'),
+        api.get('/reports?limit=5'),
+      ]).then(([sitesRes, reportsRes]) => {
+        setSites(asArray(sitesRes.data))
+        setReports(asArray(reportsRes.data))
+        setLoading(false)
+      }).catch((error) => {
+        console.error('Failed to fetch engineer dashboard data:', error)
         setLoading(false)
       })
     }
-  }, [token])
+  }, [user])
 
   const pendingCount = reports.filter((r) => r.status === 'pending').length
   const approvedCount = reports.filter((r) => r.status === 'approved').length
@@ -73,21 +78,22 @@ export default function EngineerDashboard() {
                 <div className="space-y-3">
                   {sites.slice(0, 5).map((site) => (
                     <Link
-                      key={site.id}
-                      href={`/engineer/new-report?site=${site.id}`}
+                      key={site._id}
+                      href={`/engineer/new-report?siteId=${site._id}`}
                       className="block p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-medium text-slate-900">{site.name}</p>
-                          <p className="text-sm text-slate-500">{site.city}</p>
+                          <p className="text-sm text-slate-500">{site.location}</p>
                         </div>
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          site.status === 'active' ? 'bg-green-100 text-green-700' :
+                          site.status === 'on-track' ? 'bg-green-100 text-green-700' :
                           site.status === 'on_hold' ? 'bg-yellow-100 text-yellow-700' :
+                          site.status === 'delayed' ? 'bg-red-100 text-red-700' :
                           'bg-slate-100 text-slate-700'
                         }`}>
-                          {site.status}
+                          {site.status?.replace('-', ' ').replace('_', ' ').toUpperCase()}
                         </span>
                       </div>
                     </Link>
@@ -105,14 +111,14 @@ export default function EngineerDashboard() {
                 </div>
                 <div className="space-y-3">
                   {reports.slice(0, 5).map((report) => (
-                    <div key={report.id} className="p-3 rounded-lg border border-slate-200">
+                    <div key={report._id} className="p-3 rounded-lg border border-slate-200">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium text-slate-900">{report.site?.name || 'Unknown Site'}</p>
-                          <p className="text-sm text-slate-500">{report.report_date}</p>
+                          <p className="font-medium text-slate-900">{(report.site as any)?.name || 'Unknown Site'}</p>
+                          <p className="text-sm text-slate-500">{report.submittedAt ? new Date(report.submittedAt).toLocaleDateString() : ''}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-slate-600">{report.compliance_score?.toFixed(0)}%</span>
+                          <span className="text-sm text-slate-600">{report.complianceScore?.toFixed(0)}%</span>
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                             report.status === 'approved' ? 'bg-green-100 text-green-700' :
                             report.status === 'rejected' ? 'bg-red-100 text-red-700' :
