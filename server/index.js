@@ -37,9 +37,16 @@ const MONGODB_URI =
   process.env.MONGODB_URI ||
   'mongodb+srv://admin:admin123@cluster0.66pozh2.mongodb.net/quality_pulse?retryWrites=true&w=majority';
 
+const { seedDefaultPolicies } = require('./utils/governance');
+
 mongoose
   .connect(MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB Atlas'))
+  .then(async () => {
+    console.log('Connected to MongoDB Atlas');
+    // Seed default governance policies on every startup
+    // Uses upsert, so safe to call repeatedly (idempotent)
+    await seedDefaultPolicies();
+  })
   .catch(err => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
