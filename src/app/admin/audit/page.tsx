@@ -92,7 +92,8 @@ export default function AuditLogsPage() {
             </div>
           ) : (
             <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-              <table className="w-full text-left">
+              <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[800px]">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Timestamp</th>
@@ -128,6 +129,7 @@ export default function AuditLogsPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
