@@ -157,7 +157,7 @@ router.post('/bootstrap-admin', async (req, res) => {
 
     /* ── STEP 4: Set Firebase custom claims (idempotent operation) ── */
     await admin.auth().setCustomUserClaims(firebaseUser.uid, {
-      role: 'super_admin',
+      role: 'admin',
     });
 
     /* ── STEP 5: Upsert MongoDB User record (never create duplicates) ── */

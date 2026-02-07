@@ -20,7 +20,8 @@ const systemSettingsSchema = new mongoose.Schema({
   superAdminUid: { type: String, default: null },
   bootstrappedAt: { type: Date, default: null },
 }, {
-  // Disable auto-generation of ObjectId since we use string _id
+  // `_id: false` prevents Mongoose from auto-generating an ObjectId.
+  // We define _id as a String field above to use custom string keys (e.g. 'bootstrap').
   _id: false,
   timestamps: false,
 });
