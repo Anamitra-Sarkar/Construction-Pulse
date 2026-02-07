@@ -30,9 +30,14 @@ export default function EngineerSitesPage() {
       try {
         const res = await api.get('/sites')
         if (timeoutId) clearTimeout(timeoutId)
-        console.log('[Engineer Sites] API Response:', res.data)
+        
+        // Debug logging (development only)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Engineer Sites] API Response:', res.data)
+          console.log('[Engineer Sites] Sites loaded:', asArray<Site>(res.data).length)
+        }
+        
         setSites(asArray<Site>(res.data))
-        console.log('[Engineer Sites] Sites loaded:', asArray<Site>(res.data).length)
         setError(null)
       } catch (err: any) {
         if (timeoutId) clearTimeout(timeoutId)
