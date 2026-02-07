@@ -140,8 +140,7 @@ function NewReportForm() {
             {loading ? 'Submitting...' : 'Submit QA Report'}
           </button>
         </div>
-          </div>
-        </form>
+      </form>
         </div>
       </DashboardLayout>
     </AuthGuard>
