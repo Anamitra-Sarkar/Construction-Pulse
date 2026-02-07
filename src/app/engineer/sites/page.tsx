@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
 import api from '@/lib/api'
 import { Site } from '@/lib/types'
 import Link from 'next/link'
@@ -13,11 +14,14 @@ import { asArray } from '@/lib/safe'
 const LOADING_TIMEOUT = 5000
 
 export default function EngineerSitesPage() {
+  const { user } = useAuth()
   const [sites, setSites] = useState<Site[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!user) return
+    
     let timeoutId: NodeJS.Timeout | null = null
     
     const fetchSites = async () => {
@@ -56,7 +60,7 @@ export default function EngineerSitesPage() {
     return () => {
       if (timeoutId) clearTimeout(timeoutId)
     }
-  }, [])
+  }, [user])
 
   if (loading) {
     return (
