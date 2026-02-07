@@ -23,7 +23,9 @@ export default function BootstrapAdminPage() {
   const checkSystemStatus = async () => {
     try {
       const res = await axios.get(`${apiBaseUrl}/governance/status`)
-      setInitialized(res.data.initialized)
+      // Use `bootstrapped` as primary field (source of truth from SystemSettings),
+      // fall back to `initialized` for backward compatibility
+      setInitialized(res.data.bootstrapped ?? res.data.initialized)
     } catch (error) {
       console.error('Failed to check system status:', error)
     } finally {
