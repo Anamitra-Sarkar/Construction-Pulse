@@ -84,10 +84,38 @@ export interface AnalyticsSummary {
     totalReports: number
     approvedReports: number
     avgCompliance: number
+    activeSites: number
+    pendingReports: number
+    rejectedReports: number
   }
-  dailyTrends: {
-    _id: string
-    count: number
-    avgCompliance: number
-  }[]
+  dailyTrends: DailyTrend[]
+  siteComparison: SiteComparison[]
+}
+
+export interface DailyTrend {
+  _id: string
+  count: number
+  avgCompliance: number
+}
+
+export interface SiteComparison {
+  site_id: string
+  site_name: string
+  report_count: number
+  avg_compliance: number
+}
+
+export interface DashboardAnalytics {
+  summary: {
+    totalSites: number
+    activeSites: number
+    totalReports: number
+    averageCompliance: number
+    approvedRate: number
+    approvedReports: number
+    rejectedReports: number
+    pendingReports: number
+  }
+  dailyTrends: DailyTrend[]
+  siteComparison: SiteComparison[]
 }
