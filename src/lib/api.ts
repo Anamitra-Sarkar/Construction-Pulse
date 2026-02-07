@@ -1,5 +1,10 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { apiBaseUrl } from './api-url';
+
+// Extend AxiosRequestConfig to include our retry flag
+interface RetryableRequestConfig extends AxiosRequestConfig {
+  _retry?: boolean;
+}
 
 const api = axios.create({
   baseURL: apiBaseUrl,
@@ -27,8 +32,7 @@ api.interceptors.request.use(async (config) => {
         console.log('[API] Attached Firebase token to request:', {
           url: config.url,
           method: config.method,
-          hasToken: !!token,
-          tokenPrefix: token ? token.substring(0, 20) + '...' : 'none'
+          hasToken: !!token
         });
       }
     } catch (error) {
@@ -58,7 +62,7 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as RetryableRequestConfig;
     
     // Handle 401 - possible expired token
     if (error.response?.status === 401 && !originalRequest._retry) {
