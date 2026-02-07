@@ -59,12 +59,12 @@ export default function AdminDashboard() {
             Admin Dashboard
           </SectionHeading>
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        ) : analytics ? (
-          <>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : analytics ? (
+            <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <StatCard
                 label="Total Sites"
@@ -195,6 +195,7 @@ export default function AdminDashboard() {
         ) : (
           <p className="text-slate-500">Failed to load analytics</p>
         )}
+        </div>
       </DashboardLayout>
     </AuthGuard>
   )
