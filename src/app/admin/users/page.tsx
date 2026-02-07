@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import api from '@/lib/api'
 import { User } from '@/lib/types'
 import { useAuth } from '@/lib/auth-context'
+import { DashboardLayout } from '@/components/dashboard-layout'
+import { AuthGuard } from '@/components/auth-guard'
+import { asArray, asNumber } from '@/lib/safe'
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth()
@@ -23,8 +26,10 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       const res = await api.get('/auth/users')
-      setUsers(res.data.users || res.data)
-      setAdminCount(res.data.adminCount || 0)
+      // Defensive: ensure array
+      const usersData = asArray<User>(res.data.users || res.data)
+      setUsers(usersData)
+      setAdminCount(asNumber(res.data.adminCount, 0))
     } catch (error) {
       console.error('Failed to fetch users:', error)
     } finally {
@@ -97,8 +102,10 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <AuthGuard allowedRoles={['admin']}>
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">User Management</h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -336,5 +343,7 @@ export default function UsersPage() {
         </div>
       )}
     </div>
+      </DashboardLayout>
+    </AuthGuard>
   )
 }

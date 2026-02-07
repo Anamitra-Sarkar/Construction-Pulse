@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useEffect, useState } from 'react'
 import { DashboardAnalytics } from '@/lib/types'
 import Link from 'next/link'
+import { asArray, asNumber } from '@/lib/safe'
 
 export default function AdminDashboard() {
   const { token } = useAuth()
@@ -27,17 +28,17 @@ export default function AdminDashboard() {
           // Ensure data has expected structure with safe defaults
           const normalizedData: DashboardAnalytics = {
             summary: {
-              totalSites: data?.summary?.totalSites ?? 0,
-              activeSites: data?.summary?.activeSites ?? 0,
-              pendingReports: data?.summary?.pendingReports ?? 0,
-              averageCompliance: data?.summary?.averageCompliance ?? 0,
-              totalReports: data?.summary?.totalReports ?? 0,
-              approvedReports: data?.summary?.approvedReports ?? 0,
-              rejectedReports: data?.summary?.rejectedReports ?? 0,
-              approvedRate: data?.summary?.approvedRate ?? 0,
+              totalSites: asNumber(data?.summary?.totalSites, 0),
+              activeSites: asNumber(data?.summary?.activeSites, 0),
+              pendingReports: asNumber(data?.summary?.pendingReports, 0),
+              averageCompliance: asNumber(data?.summary?.averageCompliance, 0),
+              totalReports: asNumber(data?.summary?.totalReports, 0),
+              approvedReports: asNumber(data?.summary?.approvedReports, 0),
+              rejectedReports: asNumber(data?.summary?.rejectedReports, 0),
+              approvedRate: asNumber(data?.summary?.approvedRate, 0),
             },
-            dailyTrends: Array.isArray(data?.dailyTrends) ? data.dailyTrends : [],
-            siteComparison: Array.isArray(data?.siteComparison) ? data.siteComparison : [],
+            dailyTrends: asArray(data?.dailyTrends),
+            siteComparison: asArray(data?.siteComparison),
           }
           setAnalytics(normalizedData)
           setLoading(false)
@@ -115,7 +116,7 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-xl border border-slate-200 p-6">
                 <h3 className="font-semibold text-slate-900 mb-4">Site Performance</h3>
                 <div className="space-y-3">
-                  {analytics.siteComparison.slice(0, 5).map((site) => (
+                  {asArray(analytics.siteComparison).slice(0, 5).map((site) => (
                     <div key={site.site_id} className="flex items-center justify-between">
                       <span className="text-sm text-slate-600 truncate max-w-[200px]">
                         {site.site_name}
@@ -124,16 +125,16 @@ export default function AdminDashboard() {
                         <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-600 rounded-full"
-                            style={{ width: `${site.avg_compliance}%` }}
+                            style={{ width: `${asNumber(site.avg_compliance, 0)}%` }}
                           />
                         </div>
                         <span className="text-sm font-medium text-slate-900 w-12 text-right">
-                          {site.avg_compliance.toFixed(0)}%
+                          {asNumber(site.avg_compliance, 0).toFixed(0)}%
                         </span>
                       </div>
                     </div>
                   ))}
-                  {analytics.siteComparison.length === 0 && (
+                  {asArray(analytics.siteComparison).length === 0 && (
                     <p className="text-sm text-slate-500 text-center py-4">No site data available</p>
                   )}
                 </div>

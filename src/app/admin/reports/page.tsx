@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import api from '@/lib/api'
 import { QAReport } from '@/lib/types'
 import { format } from 'date-fns'
+import { DashboardLayout } from '@/components/dashboard-layout'
+import { AuthGuard } from '@/components/auth-guard'
+import { asArray } from '@/lib/safe'
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<QAReport[]>([])
@@ -18,7 +21,9 @@ export default function AdminReportsPage() {
   const fetchReports = async () => {
     try {
       const res = await api.get('/reports')
-      setReports(res.data)
+      // Defensive: ensure array
+      const reportsData = asArray<QAReport>(res.data)
+      setReports(reportsData)
     } catch (error) {
       console.error('Failed to fetch reports:', error)
     } finally {
@@ -39,8 +44,10 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">QA Reports Review</h1>
+    <AuthGuard allowedRoles={['admin']}>
+      <DashboardLayout>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold text-slate-900">QA Reports Review</h1>
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left">
@@ -145,5 +152,7 @@ export default function AdminReportsPage() {
         </div>
       )}
     </div>
+      </DashboardLayout>
+    </AuthGuard>
   )
 }

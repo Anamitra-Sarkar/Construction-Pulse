@@ -27,7 +27,35 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout, notifications, unreadCount, markNotificationsRead } = useAuth()
   const pathname = usePathname()
   const [showNotifications, setShowNotifications] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile menu state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Desktop collapse state
+  
+  // Load collapsed state from localStorage on mount
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ui.sidebarCollapsed')
+      if (saved !== null) {
+        setSidebarCollapsed(saved === 'true')
+      }
+    }
+  })
+  
+  // Toggle sidebar collapse and persist to localStorage
+  const toggleSidebarCollapse = () => {
+    const newState = !sidebarCollapsed
+    setSidebarCollapsed(newState)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ui.sidebarCollapsed', String(newState))
+    }
+  }
+  
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      toggleSidebarCollapse()
+    }
+  }
 
   const navItems = user?.role === 'admin' ? adminNavItems : engineerNavItems
 
@@ -38,6 +66,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2.5 rounded-xl hover:bg-slate-100 transition-colors active:scale-95"
+          aria-label="Toggle mobile menu"
         >
           <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -45,6 +74,32 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </button>
         <span className="ml-4 font-bold text-slate-900 tracking-tight">Quality Pulse</span>
       </div>
+      
+      {/* Desktop Toggle Button - Top Left */}
+      <button
+        onClick={toggleSidebarCollapse}
+        onKeyDown={handleKeyDown}
+        className="hidden lg:flex fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-white/90 backdrop-blur-md border border-border/40 hover:bg-slate-50 transition-all duration-300 active:scale-95 shadow-soft"
+        style={{ 
+          left: sidebarCollapsed ? '1rem' : 'calc(16rem + 1rem)',
+          transition: 'left 300ms cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+        aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-expanded={!sidebarCollapsed}
+        tabIndex={0}
+      >
+        <svg 
+          className={cn(
+            "w-5 h-5 text-slate-600 transition-transform duration-300",
+            sidebarCollapsed ? "" : "rotate-180"
+          )} 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        </svg>
+      </button>
 
       {sidebarOpen && (
         <div
@@ -55,18 +110,28 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-0 left-0 z-50 h-full w-64 bg-white/90 backdrop-blur-xl border-r border-border/40 transform transition-all duration-300 ease-soft lg:translate-x-0",
-        sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        "fixed top-0 left-0 z-40 h-full bg-white/90 backdrop-blur-xl border-r border-border/40 transform transition-all duration-300 ease-soft",
+        // Mobile behavior
+        "lg:translate-x-0",
+        sidebarOpen ? "translate-x-0 shadow-2xl w-64" : "-translate-x-full",
+        // Desktop behavior
+        sidebarCollapsed ? "lg:w-20" : "lg:w-64"
       )}>
         <div className="flex flex-col h-full bg-fabric">
           <div className="h-16 flex items-center px-6 border-b border-border/40">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shadow-soft">
+            <div className={cn(
+              "flex items-center gap-3 transition-all duration-300",
+              sidebarCollapsed && "lg:justify-center lg:px-0"
+            )}>
+              <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center shadow-soft shrink-0">
                 <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <span className="font-bold text-slate-900 tracking-tight">Quality Pulse</span>
+              {!sidebarCollapsed && (
+                <span className="font-bold text-slate-900 tracking-tight lg:block hidden">Quality Pulse</span>
+              )}
+              <span className="font-bold text-slate-900 tracking-tight lg:hidden">Quality Pulse</span>
             </div>
           </div>
 
@@ -80,47 +145,69 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ease-soft",
                   pathname === item.href
                     ? "bg-primary/5 text-primary shadow-[inset_0_0_0_1px_rgba(var(--primary),0.1)]"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900",
+                  sidebarCollapsed && "lg:justify-center lg:px-3"
                 )}
+                title={sidebarCollapsed ? item.label : undefined}
               >
                 <svg className={cn(
-                  "w-5 h-5 transition-transform duration-300",
+                  "w-5 h-5 transition-transform duration-300 shrink-0",
                   pathname === item.href ? "scale-110" : "group-hover:scale-110"
                 )} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={pathname === item.href ? 2.5 : 2} d={item.icon} />
                 </svg>
-                {item.label}
+                {!sidebarCollapsed && (
+                  <span className="lg:block hidden">{item.label}</span>
+                )}
+                <span className="lg:hidden">{item.label}</span>
               </Link>
             ))}
           </nav>
 
           <div className="p-4 border-t border-border/40">
-            <div className="flex items-center gap-3 px-4 py-3 bg-white/50 rounded-2xl border border-border/40 shadow-soft mb-2">
-              <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20">
+            <div className={cn(
+              "flex items-center gap-3 px-4 py-3 bg-white/50 rounded-2xl border border-border/40 shadow-soft mb-2",
+              sidebarCollapsed && "lg:justify-center lg:px-2"
+            )}>
+              <div className="w-9 h-9 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 shrink-0">
                 <span className="text-sm font-bold text-primary">
                   {user?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="flex-1 min-w-0">
+              {!sidebarCollapsed && (
+                <div className="flex-1 min-w-0 lg:block hidden">
+                  <p className="text-sm font-bold text-slate-900 truncate tracking-tight">{user?.name}</p>
+                  <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{user?.role}</p>
+                </div>
+              )}
+              <div className="flex-1 min-w-0 lg:hidden">
                 <p className="text-sm font-bold text-slate-900 truncate tracking-tight">{user?.name}</p>
                 <p className="text-[10px] text-primary font-bold uppercase tracking-widest">{user?.role}</p>
               </div>
             </div>
             <button
               onClick={logout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 active:scale-95"
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 active:scale-95",
+                sidebarCollapsed && "lg:justify-center lg:px-3"
+              )}
+              title={sidebarCollapsed ? "Sign Out" : undefined}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Sign Out
+              {!sidebarCollapsed && <span className="lg:block hidden">Sign Out</span>}
+              <span className="lg:hidden">Sign Out</span>
             </button>
           </div>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="lg:pl-64">
+      <div className={cn(
+        "transition-all duration-300",
+        sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"
+      )}>
         <header className="sticky top-0 z-20 h-16 bg-white/70 backdrop-blur-md border-b border-border/40 hidden lg:flex items-center justify-between px-8 bg-fabric">
           <div className="text-sm font-semibold text-slate-400 tracking-wide uppercase">
             {pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || 'Dashboard'}

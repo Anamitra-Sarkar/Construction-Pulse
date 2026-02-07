@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import api from '@/lib/api'
 import { Site, User } from '@/lib/types'
+import { DashboardLayout } from '@/components/dashboard-layout'
+import { AuthGuard } from '@/components/auth-guard'
+import { asArray } from '@/lib/safe'
 
 export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([])
@@ -23,8 +26,12 @@ export default function SitesPage() {
         api.get('/sites'),
         api.get('/auth/users')
       ])
-      setSites(sitesRes.data)
-      setUsers(usersRes.data.filter((u: User) => u.role === 'engineer'))
+      // Defensive: ensure arrays
+      const sitesData = asArray<Site>(sitesRes.data)
+      const usersData = asArray<User>(usersRes.data.users || usersRes.data)
+      
+      setSites(sitesData)
+      setUsers(usersData.filter((u: User) => u.role === 'engineer'))
     } catch (error) {
       console.error('Failed to fetch data:', error)
     } finally {
@@ -55,16 +62,18 @@ export default function SitesPage() {
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-slate-900">Construction Sites</h1>
-        <button 
-          onClick={() => setShowModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Add New Site
-        </button>
-      </div>
+    <AuthGuard allowedRoles={['admin']}>
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-slate-900">Construction Sites</h1>
+            <button 
+              onClick={() => setShowModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add New Site
+            </button>
+          </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sites.map(site => (
@@ -161,5 +170,7 @@ export default function SitesPage() {
         </div>
       )}
     </div>
+      </DashboardLayout>
+    </AuthGuard>
   )
 }
