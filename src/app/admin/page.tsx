@@ -10,39 +10,71 @@ import { asArray, asNumber } from '@/lib/safe'
 import { SectionHeading } from '@/components/SectionHeading'
 import api from '@/lib/api'
 
+// Maximum time to wait for API response (in ms)
+const LOADING_TIMEOUT = 5000
+
 export default function AdminDashboard() {
   const { user } = useAuth()
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user) {
-      api.get('/analytics/dashboard')
-        .then((res) => {
-          const data = res.data
-          // Ensure data has expected structure with safe defaults
-          const normalizedData: DashboardAnalytics = {
-            summary: {
-              totalSites: asNumber(data?.summary?.totalSites, 0),
-              activeSites: asNumber(data?.summary?.activeSites, 0),
-              pendingReports: asNumber(data?.summary?.pendingReports, 0),
-              averageCompliance: asNumber(data?.summary?.averageCompliance, 0),
-              totalReports: asNumber(data?.summary?.totalReports, 0),
-              approvedReports: asNumber(data?.summary?.approvedReports, 0),
-              rejectedReports: asNumber(data?.summary?.rejectedReports, 0),
-              approvedRate: asNumber(data?.summary?.approvedRate, 0),
-            },
-            dailyTrends: asArray(data?.dailyTrends),
-            siteComparison: asArray(data?.siteComparison),
-          }
-          setAnalytics(normalizedData)
-          setLoading(false)
-        })
-        .catch((error: any) => {
-          console.error('Failed to fetch analytics:', error)
-          // Don't set analytics to enable fallback UI
-          setLoading(false)
-        })
+    if (!user) return
+    
+    let timeoutId: NodeJS.Timeout | null = null
+    
+    const fetchAnalytics = async () => {
+      // Set a timeout to prevent infinite loading
+      timeoutId = setTimeout(() => {
+        setLoading(false)
+        setErrorMessage('Loading took too long. Please refresh the page.')
+      }, LOADING_TIMEOUT)
+      
+      try {
+        const res = await api.get('/analytics/dashboard')
+        
+        if (timeoutId) clearTimeout(timeoutId)
+        
+        const data = res.data
+        // Ensure data has expected structure with safe defaults
+        const normalizedData: DashboardAnalytics = {
+          summary: {
+            totalSites: asNumber(data?.summary?.totalSites, 0),
+            activeSites: asNumber(data?.summary?.activeSites, 0),
+            pendingReports: asNumber(data?.summary?.pendingReports, 0),
+            averageCompliance: asNumber(data?.summary?.averageCompliance, 0),
+            totalReports: asNumber(data?.summary?.totalReports, 0),
+            approvedReports: asNumber(data?.summary?.approvedReports, 0),
+            rejectedReports: asNumber(data?.summary?.rejectedReports, 0),
+            approvedRate: asNumber(data?.summary?.approvedRate, 0),
+          },
+          dailyTrends: asArray(data?.dailyTrends),
+          siteComparison: asArray(data?.siteComparison),
+        }
+        setAnalytics(normalizedData)
+        setErrorMessage(null)
+      } catch (error: any) {
+        if (timeoutId) clearTimeout(timeoutId)
+        console.error('Failed to fetch analytics:', error)
+        
+        if (error.response?.status === 401) {
+          setErrorMessage('Session expired or unauthorized. Please log in again.')
+        } else if (error.response?.status === 404) {
+          setErrorMessage('Analytics service not configured. Dashboard metrics may be unavailable.')
+        } else {
+          setErrorMessage('Failed to load analytics. Dashboard may show limited data.')
+        }
+        // Don't set analytics to enable fallback UI
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchAnalytics()
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
     }
   }, [user])
 
@@ -55,8 +87,9 @@ export default function AdminDashboard() {
           </SectionHeading>
 
           {loading ? (
-            <div className="flex justify-center py-12">
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="text-sm text-slate-500">Loading dashboard...</p>
             </div>
           ) : !analytics ? (
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8">
@@ -66,17 +99,31 @@ export default function AdminDashboard() {
                 </svg>
                 <div>
                   <h3 className="font-semibold text-yellow-900 mb-2">Analytics Not Available</h3>
-                  <p className="text-yellow-700 text-sm">
-                    Unable to load dashboard analytics. This could be due to:
-                  </p>
-                  <ul className="list-disc list-inside text-yellow-700 text-sm mt-2 space-y-1">
-                    <li>Analytics endpoint not configured</li>
-                    <li>Insufficient permissions</li>
-                    <li>Temporary service unavailability</li>
-                  </ul>
-                  <p className="text-yellow-600 text-xs mt-4">
-                    You can still access other admin features via the navigation menu.
-                  </p>
+                  {errorMessage ? (
+                    <p className="text-yellow-700 text-sm">{errorMessage}</p>
+                  ) : (
+                    <p className="text-yellow-700 text-sm">
+                      Unable to load dashboard analytics. This could be due to:
+                    </p>
+                  )}
+                  {!errorMessage && (
+                    <ul className="list-disc list-inside text-yellow-700 text-sm mt-2 space-y-1">
+                      <li>Analytics endpoint not configured</li>
+                      <li>Insufficient permissions</li>
+                      <li>Temporary service unavailability</li>
+                    </ul>
+                  )}
+                  <div className="flex items-center gap-4 mt-4">
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-yellow-700 text-sm font-medium hover:text-yellow-800 underline"
+                    >
+                      Retry
+                    </button>
+                    <p className="text-yellow-600 text-xs">
+                      You can still access other admin features via the navigation menu.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

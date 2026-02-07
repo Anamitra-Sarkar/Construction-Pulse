@@ -10,15 +10,28 @@ import { asArray, asNumber } from '@/lib/safe'
 import { ChartWrapper } from '@/components/ChartWrapper'
 import { SectionHeading } from '@/components/SectionHeading'
 
+// Maximum time to wait for API response (in ms)
+const LOADING_TIMEOUT = 5000
+
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null
+    
     const fetchData = async () => {
+      // Set a timeout to prevent infinite loading
+      timeoutId = setTimeout(() => {
+        setLoading(false)
+        setError('Loading took too long. Please refresh the page.')
+      }, LOADING_TIMEOUT)
+      
       try {
         const res = await api.get('/analytics/summary')
+        
+        if (timeoutId) clearTimeout(timeoutId)
         
         // Defensive: Normalize the response data
         const rawData = res.data || {}
@@ -39,23 +52,33 @@ export default function AnalyticsPage() {
         setData(normalizedData)
         setError(null)
       } catch (err: any) {
+        if (timeoutId) clearTimeout(timeoutId)
         console.error('Failed to fetch analytics:', err)
-        if (err.response?.status === 404) {
-          setError('Analytics endpoint not found. Please check your API configuration.')
+        if (err.response?.status === 401) {
+          setError('Session expired. Please log in again.')
+        } else if (err.response?.status === 404) {
+          setError('Analytics service not configured yet.')
         } else {
-          setError('Failed to load analytics data. Please try again later.')
+          setError('Failed to load analytics data. Please try again.')
         }
       } finally {
         setLoading(false)
       }
     }
     fetchData()
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+    }
   }, [])
 
   if (loading) return (
     <AuthGuard allowedRoles={['admin']}>
       <DashboardLayout>
-        <div className="p-8">Loading analytics...</div>
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-sm text-slate-500">Loading analytics...</p>
+        </div>
       </DashboardLayout>
     </AuthGuard>
   )
@@ -63,10 +86,26 @@ export default function AnalyticsPage() {
   if (error) return (
     <AuthGuard allowedRoles={['admin']}>
       <DashboardLayout>
-        <div className="p-8">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-            <h3 className="font-semibold text-yellow-900 mb-2">Analytics Unavailable</h3>
-            <p className="text-yellow-700">{error}</p>
+        <div className="space-y-8">
+          <SectionHeading subtitle="View comprehensive quality metrics and trends">
+            Enterprise Analytics
+          </SectionHeading>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-8">
+            <div className="flex items-start gap-4">
+              <svg className="w-8 h-8 text-yellow-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h3 className="font-semibold text-yellow-900 mb-2">Analytics Unavailable</h3>
+                <p className="text-yellow-700">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg font-medium hover:bg-yellow-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </DashboardLayout>
