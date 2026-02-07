@@ -21,12 +21,34 @@ export default function AdminDashboard() {
       fetch('/api/analytics', {
         headers: { Authorization: `Bearer ${token}` },
       })
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`)
+          }
+          return res.json()
+        })
         .then((data) => {
-          setAnalytics(data)
+          // Ensure data has expected structure with safe defaults
+          const normalizedData = {
+            summary: {
+              totalSites: data?.summary?.totalSites ?? 0,
+              activeSites: data?.summary?.activeSites ?? 0,
+              pendingReports: data?.summary?.pendingReports ?? 0,
+              averageCompliance: data?.summary?.averageCompliance ?? 0,
+              totalReports: data?.summary?.totalReports ?? 0,
+              approvedReports: data?.summary?.approvedReports ?? 0,
+              rejectedReports: data?.summary?.rejectedReports ?? 0,
+            },
+            dailyTrends: Array.isArray(data?.dailyTrends) ? data.dailyTrends : [],
+            siteComparison: Array.isArray(data?.siteComparison) ? data.siteComparison : [],
+          }
+          setAnalytics(normalizedData)
           setLoading(false)
         })
-        .catch(() => setLoading(false))
+        .catch((error) => {
+          console.error('Failed to fetch analytics:', error)
+          setLoading(false)
+        })
     }
   }, [token])
 

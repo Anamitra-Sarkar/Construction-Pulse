@@ -90,4 +90,25 @@ export interface AnalyticsSummary {
     count: number
     avgCompliance: number
   }[]
+  totalSites: number
+  totalReports: number
+  activeSites: number
+  pendingReports: number
+  approvedReports: number
+  rejectedReports: number
+  averageCompliance: number
+}
+
+export interface DailyTrend {
+  _id: string
+  date: string
+  count: number
+  avgCompliance: number
+}
+
+export interface SiteComparison {
+  site_id: string
+  site_name: string
+  report_count: number
+  avg_compliance: number
 }
