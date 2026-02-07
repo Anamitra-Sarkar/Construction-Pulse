@@ -86,7 +86,7 @@ export default function EngineerReportsPage() {
         </table>
       </div>
 
-          {selectedReport && (
+      {selectedReport && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
@@ -141,7 +141,7 @@ export default function EngineerReportsPage() {
             </div>
           </div>
         </div>
-          )}
+      )}
         </div>
       </DashboardLayout>
     </AuthGuard>
