@@ -213,7 +213,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"
       )}>
         <header className="sticky top-0 z-20 h-16 bg-white/70 backdrop-blur-md border-b border-border/40 hidden lg:flex items-center justify-between px-8 bg-fabric">
-          <div className="text-sm font-semibold text-slate-400 tracking-wide uppercase">
+          <div className="text-sm font-semibold text-slate-400 tracking-wide uppercase pl-12">
             {pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || 'Dashboard'}
           </div>
           <div className="flex items-center gap-6">

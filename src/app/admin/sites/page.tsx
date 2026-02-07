@@ -50,6 +50,11 @@ export default function SitesPage() {
       return
     }
     
+    if (!newSite.location.trim()) {
+      toast.error('Location is required')
+      return
+    }
+    
     setIsSubmitting(true)
     try {
       await api.post('/sites', newSite)
@@ -167,14 +172,15 @@ export default function SitesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Location
+                  Location <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  required
                   value={newSite.location}
                   onChange={(e) => setNewSite({ ...newSite, location: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter location (optional)"
+                  placeholder="Enter location"
                 />
               </div>
               <div>

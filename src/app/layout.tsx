@@ -10,6 +10,9 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 export const metadata: Metadata = {
   title: "Construction Quality Pulse",
   description: "Enterprise Construction Quality Assurance System",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

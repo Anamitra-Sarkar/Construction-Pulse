@@ -32,7 +32,7 @@ const auditLogSchema = new mongoose.Schema({
   // Hash of this entry (computed from previousHash + content)
   entryHash: { type: String },
   // Monotonic sequence number for ordering verification
-  sequenceNumber: { type: Number, index: true },
+  sequenceNumber: { type: Number },
 
   createdAt: { type: Date, default: Date.now }
 });
