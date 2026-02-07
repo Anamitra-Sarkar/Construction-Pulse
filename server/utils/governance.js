@@ -39,7 +39,7 @@ const appendAuditLog = async (action, resource, details, ip, userId = null, reso
       .lean();
 
     const previousHash = lastEntry ? lastEntry.entryHash : 'GENESIS';
-    const sequenceNumber = lastEntry ? (lastEntry.sequenceNumber || 0) + 1 : 1;
+    const sequenceNumber = lastEntry ? (lastEntry.sequenceNumber ?? 0) + 1 : 1;
 
     const entry = new AuditLog({
       user: userId,
@@ -273,6 +273,13 @@ const checkAdminCountSafety = async (targetUserId, action) => {
    ================================================================ */
 
 /**
+ * Default expiration window for pending actions (24 hours in milliseconds).
+ * Extracted as a constant to ensure consistency between schema defaults
+ * and runtime action creation.
+ */
+const PENDING_ACTION_EXPIRY_MS = 24 * 60 * 60 * 1000;
+
+/**
  * Create a pending action that requires multi-party approval.
  *
  * FLOW:
@@ -312,7 +319,7 @@ const createPendingAction = async (actionType, requestorId, payload, reason, ip)
     reason,
     requiredApprovals: policy.requiredApprovals,
     requestIp: ip,
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    expiresAt: new Date(Date.now() + PENDING_ACTION_EXPIRY_MS),
   });
 
   await appendAuditLog(

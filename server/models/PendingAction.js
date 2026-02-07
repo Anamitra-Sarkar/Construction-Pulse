@@ -77,11 +77,11 @@ const pendingActionSchema = new mongoose.Schema({
   reversedAt: { type: Date },
   reversedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
-  // Expiry: pending actions expire if not approved in time
+  // Expiry: pending actions expire if not approved in time (default: 24 hours)
   expiresAt: {
     type: Date,
     required: true,
-    default: () => new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
   },
 
   // Client IP for audit trail

@@ -532,7 +532,8 @@ router.post('/pending-actions/:id/cancel', verifyToken, isAdmin, async (req, res
  */
 router.get('/audit/verify', verifyToken, isAdmin, async (req, res) => {
   try {
-    const limit = Math.min(parseInt(req.query.limit) || 1000, 10000);
+    const parsed = parseInt(req.query.limit);
+    const limit = Math.min(Number.isNaN(parsed) ? 1000 : parsed, 10000);
     const result = await verifyAuditChain(limit);
 
     await appendAuditLog(
