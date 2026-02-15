@@ -21,8 +21,9 @@ export default function UsersPage() {
   const [actionError, setActionError] = useState('')
 
   useEffect(() => {
+    if (!currentUser) return
     fetchUsers()
-  }, [])
+  }, [currentUser])
 
   const fetchUsers = async () => {
     try {
