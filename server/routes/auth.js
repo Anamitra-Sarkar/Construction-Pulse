@@ -93,12 +93,55 @@ router.get('/users', verifyToken, isAdmin, async (req, res) => {
  * - Deactivating an admin requires multi-party approval via pending action
  * - Last-admin protection prevents reducing active admins below minimum
  * - All changes are audit-logged with tamper-evident chain
+ * 
+ * SECURITY:
+ * - Validates all input fields before processing
+ * - Only allows updating status and role fields (prevents document replacement)
+ * - Enforces role enum values: ['admin', 'engineer']
+ * - Enforces status enum values: ['active', 'inactive']
  */
 router.patch('/users/:id', verifyToken, isAdmin, async (req, res) => {
   const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
 
   try {
     const { status, role } = req.body;
+    
+    // VALIDATION: Ensure only allowed fields are present in the update
+    const allowedFields = new Set(['status', 'role']);
+    const receivedFields = Object.keys(req.body);
+    const invalidFields = receivedFields.filter(field => !allowedFields.has(field));
+    
+    if (invalidFields.length > 0) {
+      return res.status(400).json({ 
+        message: `Invalid fields in request: ${invalidFields.join(', ')}. Only 'status' and 'role' are allowed.`,
+        code: 'INVALID_FIELDS'
+      });
+    }
+    
+    // VALIDATION: If status is provided, ensure it's a valid value
+    if (status && !['active', 'inactive'].includes(status)) {
+      return res.status(400).json({ 
+        message: `Invalid status value: '${status}'. Must be 'active' or 'inactive'.`,
+        code: 'INVALID_STATUS'
+      });
+    }
+    
+    // VALIDATION: If role is provided, ensure it's a valid value
+    if (role && !['admin', 'engineer'].includes(role)) {
+      return res.status(400).json({ 
+        message: `Invalid role value: '${role}'. Must be 'admin' or 'engineer'.`,
+        code: 'INVALID_ROLE'
+      });
+    }
+    
+    // VALIDATION: At least one field must be provided
+    if (!status && !role) {
+      return res.status(400).json({ 
+        message: 'At least one field (status or role) must be provided for update.',
+        code: 'NO_FIELDS'
+      });
+    }
+    
     const user = await User.findById(req.params.id);
     
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -175,6 +218,7 @@ router.patch('/users/:id', verifyToken, isAdmin, async (req, res) => {
 
     // Apply changes (for non-governed actions or single-approval policies)
     if (role && role !== user.role) {
+      // Update Firebase custom claims with the new role
       await admin.auth().setCustomUserClaims(user.firebaseUid, { role });
       
       if (user.role === 'admin' && role === 'engineer') {
@@ -223,11 +267,13 @@ router.patch('/users/:id', verifyToken, isAdmin, async (req, res) => {
       user.status = status;
     }
     
+    // Save updates (mongoose will only update changed fields)
     await user.save();
     await logAction(req.user._id, 'USER_UPDATE', { targetUser: user._id, status, role });
     
     res.json(user);
   } catch (error) {
+    console.error('Error updating user:', error);
     res.status(400).json({ message: error.message });
   }
 });
