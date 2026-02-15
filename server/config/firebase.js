@@ -1,9 +1,61 @@
 const admin = require('firebase-admin');
 
+// ========================================
+// DEFENSIVE FIREBASE ADMIN INITIALIZATION
+// ========================================
+// Ensures we're using the correct Firebase project
+// and fails early with clear errors if misconfigured
+
+const EXPECTED_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
+const FRONTEND_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+// Validate required environment variables
+if (!EXPECTED_PROJECT_ID) {
+  throw new Error(
+    'CRITICAL: FIREBASE_PROJECT_ID is not set. ' +
+    'This environment variable is required for Firebase Admin SDK initialization. ' +
+    'Check your .env or deployment configuration.'
+  );
+}
+
+if (!process.env.FIREBASE_CLIENT_EMAIL) {
+  throw new Error(
+    'CRITICAL: FIREBASE_CLIENT_EMAIL is not set. ' +
+    'This environment variable is required for Firebase Admin SDK initialization. ' +
+    'Check your .env or deployment configuration.'
+  );
+}
+
+if (!process.env.FIREBASE_PRIVATE_KEY) {
+  throw new Error(
+    'CRITICAL: FIREBASE_PRIVATE_KEY is not set. ' +
+    'This environment variable is required for Firebase Admin SDK initialization. ' +
+    'Check your .env or deployment configuration.'
+  );
+}
+
+// Cross-check that backend and frontend are configured for the same Firebase project
+if (FRONTEND_PROJECT_ID && FRONTEND_PROJECT_ID !== EXPECTED_PROJECT_ID) {
+  console.error('========================================');
+  console.error('🚨 FIREBASE PROJECT MISMATCH DETECTED 🚨');
+  console.error('========================================');
+  console.error(`Backend project:  ${EXPECTED_PROJECT_ID}`);
+  console.error(`Frontend project: ${FRONTEND_PROJECT_ID}`);
+  console.error('');
+  console.error('This configuration will cause authentication and data access issues.');
+  console.error('Ensure FIREBASE_PROJECT_ID and NEXT_PUBLIC_FIREBASE_PROJECT_ID match.');
+  console.error('========================================');
+  
+  throw new Error(
+    `Firebase project mismatch: backend=${EXPECTED_PROJECT_ID}, frontend=${FRONTEND_PROJECT_ID}. ` +
+    'Both must use the same Firebase project. Check your environment variables.'
+  );
+}
+
 const firebaseConfig = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
+  projectId: EXPECTED_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
 };
 
 if (!admin.apps.length) {
@@ -11,6 +63,10 @@ if (!admin.apps.length) {
     credential: admin.credential.cert(firebaseConfig),
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
   });
+  
+  console.log('✅ Firebase Admin SDK initialized successfully');
+  console.log(`   Project: ${EXPECTED_PROJECT_ID}`);
+  console.log(`   Service Account: ${process.env.FIREBASE_CLIENT_EMAIL}`);
 }
 
 module.exports = admin;
