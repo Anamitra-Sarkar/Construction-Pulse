@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import api from '@/lib/api'
 import { Site, User } from '@/lib/types'
 import { DashboardLayout } from '@/components/dashboard-layout'
@@ -26,16 +26,7 @@ export default function SitesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
-    if (!user) return
-    fetchData()
-    
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [user])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     
@@ -71,7 +62,16 @@ export default function SitesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+    fetchData()
+    
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [user, fetchData])
 
   const handleCreateSite = async (e: React.FormEvent) => {
     e.preventDefault()

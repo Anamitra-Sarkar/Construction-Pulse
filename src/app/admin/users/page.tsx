@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import api from '@/lib/api'
 import { User } from '@/lib/types'
 import { useAuth } from '@/lib/auth-context'
@@ -20,12 +20,7 @@ export default function UsersPage() {
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
 
-  useEffect(() => {
-    if (!currentUser) return
-    fetchUsers()
-  }, [currentUser])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await api.get('/auth/users')
       // Defensive: ensure array
@@ -37,7 +32,12 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!currentUser) return
+    fetchUsers()
+  }, [currentUser, fetchUsers])
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault()
