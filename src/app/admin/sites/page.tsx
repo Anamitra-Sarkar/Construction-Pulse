@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import api from '@/lib/api'
 import { Site, User } from '@/lib/types'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { AuthGuard } from '@/components/auth-guard'
+import { useAuth } from '@/lib/auth-context'
 import { asArray } from '@/lib/safe'
 import { SectionHeading } from '@/components/SectionHeading'
 import { toast } from 'sonner'
@@ -13,6 +14,7 @@ import { toast } from 'sonner'
 const LOADING_TIMEOUT = 5000
 
 export default function SitesPage() {
+  const { user } = useAuth()
   const [sites, setSites] = useState<Site[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -24,15 +26,7 @@ export default function SitesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
-    fetchData()
-    
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     
@@ -68,7 +62,16 @@ export default function SitesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!user) return
+    fetchData()
+    
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [user, fetchData])
 
   const handleCreateSite = async (e: React.FormEvent) => {
     e.preventDefault()
