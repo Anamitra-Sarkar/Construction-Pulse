@@ -34,6 +34,16 @@ if (!process.env.FIREBASE_PRIVATE_KEY) {
   );
 }
 
+// Validate private key format (basic check for PEM structure)
+const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
+  throw new Error(
+    'CRITICAL: FIREBASE_PRIVATE_KEY appears to be malformed. ' +
+    'It must be a valid PEM-formatted private key including BEGIN/END markers. ' +
+    'Ensure the key is properly escaped with \\n for newlines.'
+  );
+}
+
 // Cross-check that backend and frontend are configured for the same Firebase project
 if (FRONTEND_PROJECT_ID && FRONTEND_PROJECT_ID !== EXPECTED_PROJECT_ID) {
   console.error('========================================');
@@ -55,7 +65,7 @@ if (FRONTEND_PROJECT_ID && FRONTEND_PROJECT_ID !== EXPECTED_PROJECT_ID) {
 const firebaseConfig = {
   projectId: EXPECTED_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+  privateKey: privateKey.replace(/\\n/g, '\n'),
 };
 
 if (!admin.apps.length) {
@@ -64,9 +74,14 @@ if (!admin.apps.length) {
     storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
   });
   
-  console.log('✅ Firebase Admin SDK initialized successfully');
-  console.log(`   Project: ${EXPECTED_PROJECT_ID}`);
-  console.log(`   Service Account: ${process.env.FIREBASE_CLIENT_EMAIL}`);
+  // Log initialization success (only in development to avoid exposing sensitive info in prod logs)
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('✅ Firebase Admin SDK initialized successfully');
+    console.log(`   Project: ${EXPECTED_PROJECT_ID}`);
+    console.log(`   Service Account: ${process.env.FIREBASE_CLIENT_EMAIL}`);
+  } else {
+    console.log('✅ Firebase Admin SDK initialized successfully');
+  }
 }
 
 module.exports = admin;

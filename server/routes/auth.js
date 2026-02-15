@@ -107,9 +107,9 @@ router.patch('/users/:id', verifyToken, isAdmin, async (req, res) => {
     const { status, role } = req.body;
     
     // VALIDATION: Ensure only allowed fields are present in the update
-    const allowedFields = ['status', 'role'];
+    const allowedFields = new Set(['status', 'role']);
     const receivedFields = Object.keys(req.body);
-    const invalidFields = receivedFields.filter(field => !allowedFields.includes(field));
+    const invalidFields = receivedFields.filter(field => !allowedFields.has(field));
     
     if (invalidFields.length > 0) {
       return res.status(400).json({ 
